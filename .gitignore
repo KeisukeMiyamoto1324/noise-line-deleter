@@ -1,3 +1,4 @@
 __pycache__/
 .env
 venv/
+**/fineweb2_line_deleter.egg-info/
