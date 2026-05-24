@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FineWeb2 Line Deleter Viewer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div>
+            <h1>Line Deleter Viewer</h1>
+            <p id="datasetLabel">loading</p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <label class="field">
+            <span>検索</span>
+            <input id="sampleSearch" type="search" autocomplete="off" />
+          </label>
+
+          <label class="field">
+            <span>閾値 <strong id="thresholdValue">0.50</strong></span>
+            <input id="thresholdInput" type="range" min="0" max="1" step="0.01" value="0.5" />
+          </label>
+
+          <label class="toggle">
+            <input id="predictedOnlyInput" type="checkbox" />
+            <span>予測削除のみ</span>
+          </label>
+
+          <label class="toggle">
+            <input id="actualInput" type="checkbox" checked />
+            <span>正解ラベル</span>
+          </label>
+        </div>
+
+        <div id="sampleList" class="sample-list" aria-label="samples"></div>
+      </aside>
+
+      <main class="document-pane">
+        <header class="document-header">
+          <div>
+            <p id="sampleMeta" class="meta">sample</p>
+            <h2 id="documentTitle">Loading</h2>
+          </div>
+          <div class="stats">
+            <div>
+              <span id="lineCount">0</span>
+              <small>lines</small>
+            </div>
+            <div>
+              <span id="predictedCount">0</span>
+              <small>pred</small>
+            </div>
+            <div>
+              <span id="actualCount">0</span>
+              <small>true</small>
+            </div>
+          </div>
+        </header>
+
+        <section id="lineList" class="line-list" aria-label="document lines"></section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
