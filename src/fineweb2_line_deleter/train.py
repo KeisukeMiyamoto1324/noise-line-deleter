@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import random
@@ -118,6 +119,7 @@ def main() -> None:
 
     write_json(config.output_dir / "config.json", config.to_json_dict())
     write_json(config.output_dir / "dataset_sizes.json", dataset_sizes(dataset_dict))
+    initialize_loss_csv(config.output_dir / "losses.csv")
 
     best_f1 = -1.0
     history: list[dict[str, Any]] = []
@@ -137,6 +139,7 @@ def main() -> None:
         epoch_metrics = {"epoch": epoch, "train_loss": train_loss, **prefix_metrics(valid_metrics, "valid")}
         history.append(epoch_metrics)
         write_json(config.output_dir / "history.json", history)
+        append_loss_csv(config.output_dir / "losses.csv", epoch, train_loss, valid_metrics["loss"])
 
         if valid_metrics["f1_noise"] > best_f1:
             best_f1 = valid_metrics["f1_noise"]
@@ -236,6 +239,18 @@ def evaluate(
 
 def write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def initialize_loss_csv(path: Path) -> None:
+    with path.open("w", encoding="utf-8", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["epoch", "train_loss", "valid_loss"])
+
+
+def append_loss_csv(path: Path, epoch: int, train_loss: float, valid_loss: float) -> None:
+    with path.open("a", encoding="utf-8", newline="") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow([epoch, train_loss, valid_loss])
 
 
 if __name__ == "__main__":
