@@ -55,7 +55,10 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--freeze-until-layer", type=int, default=10)
+    parser.add_argument("--loss-log-steps", type=int, default=50)
     args = parser.parse_args()
+    if args.loss_log_steps <= 0:
+        raise ValueError("--loss-log-steps must be greater than 0.")
     return TrainConfig(**vars(args))
 
 
@@ -142,12 +145,13 @@ def main() -> None:
             config.gradient_accumulation_steps,
             config.max_grad_norm,
             epoch,
+            config.output_dir / "losses.csv",
+            config.loss_log_steps,
         )
         valid_metrics = evaluate(model, valid_loader, class_weights, device)
         epoch_metrics = {"epoch": epoch, "train_loss": train_loss, **prefix_metrics(valid_metrics, "valid")}
         history.append(epoch_metrics)
         write_json(config.output_dir / "history.json", history)
-        append_loss_csv(config.output_dir / "losses.csv", epoch, train_loss, valid_metrics["loss"])
 
         if valid_metrics["f1_noise"] > best_f1:
             best_f1 = valid_metrics["f1_noise"]
@@ -191,6 +195,8 @@ def train_one_epoch(
     gradient_accumulation_steps: int,
     max_grad_norm: float,
     epoch: int,
+    loss_csv_path: Path,
+    loss_log_steps: int,
 ) -> float:
     model.train()
     optimizer.zero_grad(set_to_none=True)
@@ -204,7 +210,11 @@ def train_one_epoch(
         outputs = model(input_ids, attention_mask, labels, class_weights)
         loss = outputs["loss"] / gradient_accumulation_steps
         loss.backward()
-        total_loss += float(outputs["loss"].detach().cpu().item())
+        batch_loss = float(outputs["loss"].detach().cpu().item())
+        total_loss += batch_loss
+
+        if step % loss_log_steps == 0:
+            append_step_loss_csv(loss_csv_path, epoch, step, batch_loss)
 
         if step % gradient_accumulation_steps == 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
@@ -256,13 +266,13 @@ def write_json(path: Path, data: Any) -> None:
 def initialize_loss_csv(path: Path) -> None:
     with path.open("w", encoding="utf-8", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["epoch", "train_loss", "valid_loss"])
+        writer.writerow(["epoch", "step", "train_loss"])
 
 
-def append_loss_csv(path: Path, epoch: int, train_loss: float, valid_loss: float) -> None:
+def append_step_loss_csv(path: Path, epoch: int, step: int, train_loss: float) -> None:
     with path.open("a", encoding="utf-8", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow([epoch, train_loss, valid_loss])
+        writer.writerow([epoch, step, train_loss])
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ class TrainConfig:
     max_grad_norm: float
     num_workers: int
     freeze_until_layer: int
+    loss_log_steps: int
 
     def to_json_dict(self) -> dict[str, Any]:
         data = asdict(self)
