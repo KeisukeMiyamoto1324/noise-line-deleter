@@ -38,7 +38,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--model-name", type=str, default="sbintuitions/modernbert-ja-130m")
     parser.add_argument("--dataset-name", type=str, default="MK0727/line-noise-label")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/run-001"))
-    parser.add_argument("--max-length", type=int, default=4096)
+    parser.add_argument("--max-length", type=int, default=8192)
     parser.add_argument("--max-lines-per-window", type=int, default=256)
     parser.add_argument("--line-overlap", type=int, default=32)
     parser.add_argument("--train-ratio", type=float, default=0.8)
@@ -51,7 +51,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--warmup-ratio", type=float, default=0.1)
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
-    parser.add_argument("--num-workers", type=int, default=0)
+    parser.add_argument("--num-workers", type=int, default=4)
     args = parser.parse_args()
     return TrainConfig(**vars(args))
 
