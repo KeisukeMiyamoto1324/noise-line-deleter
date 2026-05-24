@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import torch
 from torch import nn
@@ -11,13 +12,21 @@ from fineweb2_line_deleter import LINE_TOKEN
 
 
 class LineNoiseModel(nn.Module):
-    def __init__(self, model_name: str, line_token_id: int, tokenizer_length: int) -> None:
+    def __init__(
+        self,
+        model_name: str,
+        line_token_id: int,
+        tokenizer_length: int,
+        freeze_until_layer: int,
+    ) -> None:
         super().__init__()
         self.encoder = AutoModel.from_pretrained(model_name)
         self.encoder.resize_token_embeddings(tokenizer_length)
         self.dropout = nn.Dropout(float(self.encoder.config.classifier_dropout))
         self.classifier = nn.Linear(int(self.encoder.config.hidden_size), 2)
         self.line_token_id = line_token_id
+        self.freeze_until_layer = freeze_until_layer
+        self.freeze_encoder_layers(freeze_until_layer)
 
     def forward(
         self,
@@ -61,6 +70,31 @@ class LineNoiseModel(nn.Module):
         output_dir.mkdir(parents=True, exist_ok=True)
         self.encoder.config.save_pretrained(output_dir)
         torch.save(self.state_dict(), output_dir / "model.pt")
+
+    def freeze_encoder_layers(self, freeze_until_layer: int) -> None:
+        layer_count = len(self.encoder.layers)
+        if freeze_until_layer < 0 or freeze_until_layer > layer_count:
+            raise ValueError(f"freeze_until_layer must be between 0 and {layer_count}.")
+
+        for parameter in self.encoder.embeddings.parameters():
+            parameter.requires_grad = False
+
+        for layer_index, layer in enumerate(self.encoder.layers):
+            requires_grad = layer_index >= freeze_until_layer
+            for parameter in layer.parameters():
+                parameter.requires_grad = requires_grad
+
+    def parameter_summary(self) -> dict[str, Any]:
+        total_parameters = sum(parameter.numel() for parameter in self.parameters())
+        trainable_parameters = sum(parameter.numel() for parameter in self.parameters() if parameter.requires_grad)
+        frozen_parameters = total_parameters - trainable_parameters
+        return {
+            "total_parameters": total_parameters,
+            "trainable_parameters": trainable_parameters,
+            "frozen_parameters": frozen_parameters,
+            "trainable_ratio": trainable_parameters / total_parameters,
+            "freeze_until_layer": self.freeze_until_layer,
+        }
 
 
 def create_tokenizer(model_name: str) -> PreTrainedTokenizerBase:

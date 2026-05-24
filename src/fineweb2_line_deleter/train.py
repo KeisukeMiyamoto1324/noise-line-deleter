@@ -5,6 +5,7 @@ import csv
 import json
 import math
 import random
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,7 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--warmup-ratio", type=float, default=0.1)
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
     parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--freeze-until-layer", type=int, default=10)
     args = parser.parse_args()
     return TrainConfig(**vars(args))
 
@@ -96,7 +98,12 @@ def main() -> None:
         for split, dataset in dataset_dict.items()
     }
 
-    model = LineNoiseModel(config.model_name, line_token_id, len(tokenizer)).to(device)
+    model = LineNoiseModel(
+        config.model_name,
+        line_token_id,
+        len(tokenizer),
+        config.freeze_until_layer,
+    ).to(device)
     clean_count, noise_count = count_labels(windows_by_split["train"])
     class_weights = torch.tensor(
         [
@@ -111,7 +118,7 @@ def main() -> None:
     valid_loader = create_loader(windows_by_split["valid"], tokenizer.pad_token_id, config, shuffle=False)
     test_loader = create_loader(windows_by_split["test"], tokenizer.pad_token_id, config, shuffle=False)
 
-    optimizer = AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+    optimizer = AdamW(get_trainable_parameters(model), lr=config.learning_rate, weight_decay=config.weight_decay)
     optimizer_steps_per_epoch = math.ceil(len(train_loader) / config.gradient_accumulation_steps)
     total_training_steps = optimizer_steps_per_epoch * config.epochs
     warmup_steps = int(total_training_steps * config.warmup_ratio)
@@ -119,6 +126,7 @@ def main() -> None:
 
     write_json(config.output_dir / "config.json", config.to_json_dict())
     write_json(config.output_dir / "dataset_sizes.json", dataset_sizes(dataset_dict))
+    write_json(config.output_dir / "parameter_summary.json", model.parameter_summary())
     initialize_loss_csv(config.output_dir / "losses.csv")
 
     best_f1 = -1.0
@@ -165,8 +173,12 @@ def create_loader(
         batch_size=config.batch_size,
         shuffle=shuffle,
         num_workers=config.num_workers,
-        collate_fn=lambda batch: collate_line_windows(batch, pad_token_id),
+        collate_fn=partial(collate_line_windows, pad_token_id=pad_token_id),
     )
+
+
+def get_trainable_parameters(model: LineNoiseModel) -> list[torch.nn.Parameter]:
+    return [parameter for parameter in model.parameters() if parameter.requires_grad]
 
 
 def train_one_epoch(
