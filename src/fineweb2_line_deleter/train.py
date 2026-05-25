@@ -42,20 +42,20 @@ def parse_args() -> TrainConfig:
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/run-001"))
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--max-lines-per-window", type=int, default=512)
-    parser.add_argument("--line-overlap", type=int, default=8)
+    parser.add_argument("--line-overlap", type=int, default=4)
     parser.add_argument("--train-ratio", type=float, default=0.8)
     parser.add_argument("--valid-ratio", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=1)
-    parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
+    parser.add_argument("--gradient-accumulation-steps", type=int, default=16)
     parser.add_argument("--learning-rate", type=float, default=2e-5)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--warmup-ratio", type=float, default=0.1)
     parser.add_argument("--max-grad-norm", type=float, default=1.0)
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--freeze-until-layer", type=int, default=10)
-    parser.add_argument("--loss-log-steps", type=int, default=50)
+    parser.add_argument("--loss-log-steps", type=int, default=1)
     args = parser.parse_args()
     if args.loss_log_steps <= 0:
         raise ValueError("--loss-log-steps must be greater than 0.")
@@ -201,6 +201,9 @@ def train_one_epoch(
     model.train()
     optimizer.zero_grad(set_to_none=True)
     total_loss = 0.0
+    accumulation_loss = 0.0
+    accumulation_steps = 0
+    optimizer_step = 0
     progress = tqdm(loader, desc=f"epoch {epoch}", leave=False)
 
     for step, batch in enumerate(progress, start=1):
@@ -212,21 +215,30 @@ def train_one_epoch(
         loss.backward()
         batch_loss = float(outputs["loss"].detach().cpu().item())
         total_loss += batch_loss
-
-        if step % loss_log_steps == 0:
-            append_step_loss_csv(loss_csv_path, epoch, step, batch_loss)
+        accumulation_loss += batch_loss
+        accumulation_steps += 1
 
         if step % gradient_accumulation_steps == 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
             optimizer.step()
             scheduler.step()
             optimizer.zero_grad(set_to_none=True)
+            optimizer_step += 1
+            accumulation_average_loss = accumulation_loss / accumulation_steps
+            if optimizer_step % loss_log_steps == 0:
+                append_optimizer_step_loss_csv(loss_csv_path, epoch, optimizer_step, accumulation_average_loss)
+            accumulation_loss = 0.0
+            accumulation_steps = 0
 
     if len(loader) % gradient_accumulation_steps != 0:
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad(set_to_none=True)
+        optimizer_step += 1
+        accumulation_average_loss = accumulation_loss / accumulation_steps
+        if optimizer_step % loss_log_steps == 0:
+            append_optimizer_step_loss_csv(loss_csv_path, epoch, optimizer_step, accumulation_average_loss)
 
     return total_loss / len(loader)
 
@@ -266,13 +278,13 @@ def write_json(path: Path, data: Any) -> None:
 def initialize_loss_csv(path: Path) -> None:
     with path.open("w", encoding="utf-8", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["epoch", "step", "train_loss"])
+        writer.writerow(["epoch", "optimizer_step", "train_loss"])
 
 
-def append_step_loss_csv(path: Path, epoch: int, step: int, train_loss: float) -> None:
+def append_optimizer_step_loss_csv(path: Path, epoch: int, optimizer_step: int, train_loss: float) -> None:
     with path.open("a", encoding="utf-8", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow([epoch, step, train_loss])
+        writer.writerow([epoch, optimizer_step, train_loss])
 
 
 if __name__ == "__main__":
