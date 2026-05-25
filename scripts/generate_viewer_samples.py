@@ -6,11 +6,15 @@ from pathlib import Path
 from typing import Any
 
 import torch
+from huggingface_hub import hf_hub_download
 from transformers import PreTrainedTokenizerBase
 from transformers import AutoTokenizer
 
 from fineweb2_line_deleter.data import build_line_labels, load_line_noise_dataset, wrap_with_special_tokens
 from fineweb2_line_deleter.model import LineNoiseModel, get_line_token_id
+
+
+MODEL_REPO_ID = "MK0727/noise-line-remover-jp"
 
 
 @dataclass(frozen=True)
@@ -23,14 +27,14 @@ class InferenceWindow:
 def main() -> None:
     run_dir = Path("outputs/run-001")
     config = read_json(run_dir / "config.json")
-    checkpoint_dir = run_dir / "best"
     samples_dir = Path("samples")
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     device = get_mps_device()
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_REPO_ID)
     line_token_id = get_line_token_id(tokenizer)
-    model = load_model(config, checkpoint_dir, line_token_id, len(tokenizer), device)
+    model_path = Path(hf_hub_download(repo_id=MODEL_REPO_ID, filename="model.pt"))
+    model = load_model(config, model_path, line_token_id, len(tokenizer), device)
     dataset_dict = load_line_noise_dataset(
         str(config["dataset_name"]),
         float(config["train_ratio"]),
@@ -55,7 +59,7 @@ def main() -> None:
     payload = {
         "metadata": {
             "dataset_name": config["dataset_name"],
-            "checkpoint": str(checkpoint_dir),
+            "model_repo": MODEL_REPO_ID,
             "split": "test",
             "sample_count": len(samples),
             "threshold": 0.5,
@@ -80,7 +84,7 @@ def get_mps_device() -> torch.device:
 
 def load_model(
     config: dict[str, Any],
-    checkpoint_dir: Path,
+    model_path: Path,
     line_token_id: int,
     tokenizer_length: int,
     device: torch.device,
@@ -91,7 +95,7 @@ def load_model(
         tokenizer_length,
         int(config["freeze_until_layer"]),
     )
-    state_dict = torch.load(checkpoint_dir / "model.pt", map_location=device)
+    state_dict = torch.load(model_path, map_location=device)
     model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
