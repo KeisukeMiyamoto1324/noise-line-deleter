@@ -28,26 +28,34 @@ NDC ベースのサブセットを提供しており、利用者は広いトピ�
 
 
 def main() -> None:
+    # ---------------------------------------------------------
+    # Load tokenizer and AutoModel-compatible line classifier.
+    # ---------------------------------------------------------
     device = torch.device("mps")
     tokenizer = AutoTokenizer.from_pretrained("MK0727/noise-line-remover-jp")
     model = AutoModel.from_pretrained("MK0727/noise-line-remover-jp", trust_remote_code=True).to(device)
     model.eval()
 
+    # ---------------------------------------------------------
+    # Add the line marker before each input line.
+    # ---------------------------------------------------------
     lines = TEXT.split("\n")
     text = "".join(f"{LINE_TOKEN}{line}" for line in lines)
     inputs = tokenizer(text, return_tensors="pt").to(device)
 
-    start_time = perf_counter()
+    # ---------------------------------------------------------
+    # Predict the deletion probability for each line marker.
+    # ---------------------------------------------------------
     with torch.no_grad():
         logits = model(**inputs).logits
-    inference_time = perf_counter() - start_time
     probabilities = torch.softmax(logits, dim=-1)[:, 1].detach().cpu().tolist()
 
+    # ---------------------------------------------------------
+    # Print each line with its predicted label and probability.
+    # ---------------------------------------------------------
     for line_number, (line, probability) in enumerate(zip(lines, probabilities, strict=True), start=1):
         label = "DELETE" if probability >= THRESHOLD else "KEEP"
         print(f"{line_number:02d} [{label}] {probability:.4f} {line}")
-
-    print(f"Inference time: {inference_time:.4f} seconds")
 
 
 if __name__ == "__main__":
