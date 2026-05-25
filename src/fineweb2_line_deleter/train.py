@@ -68,16 +68,18 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
 
 
-def get_mps_device() -> torch.device:
-    if not torch.backends.mps.is_available():
-        raise RuntimeError("MPS is not available.")
-    return torch.device("mps")
+def get_training_device() -> torch.device:
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
 
 
 def main() -> None:
     config = parse_args()
     set_seed(config.seed)
-    device = get_mps_device()
+    device = get_training_device()
     config.output_dir.mkdir(parents=True, exist_ok=True)
 
     tokenizer = create_tokenizer(config.model_name)
