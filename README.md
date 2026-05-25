@@ -78,7 +78,7 @@ The output is a delete probability for each line. A typical workflow is:
 3. Delete lines whose probability is above a chosen threshold.
 4. Join the remaining lines back into cleaned text.
 
-The recommended threshold is `0.6`, but downstream users may tune it depending on whether they prefer higher precision or higher recall.
+The recommended deletion threshold is `0.6`.
 
 ## Model Details
 
