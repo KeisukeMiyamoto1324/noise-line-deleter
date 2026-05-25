@@ -50,7 +50,7 @@ probabilities = torch.softmax(logits, dim=-1)[:, 1].detach().cpu().tolist()
 
 for line_number, (line, probability) in enumerate(zip(lines, probabilities, strict=True), start=1):
     label = "DELETE" if probability >= THRESHOLD else "KEEP"
-    print(f"{line_number:02d} [{label}] {probability:.4f} {line}")
+    print(f"{line_number:02d} [{label:<6}] {probability:.4f} {line}")
 ```
 
 
@@ -58,13 +58,13 @@ Example output:
 
 ```text
 01 [DELETE] 0.9714 
-02 [KEEP] 0.0100 富士山は日本で最も高い山で、標高は3,776メートルである。
-03 [KEEP] 0.0009 山頂付近は夏でも気温が低く、天候が急に変化することがある。
+02 [KEEP  ] 0.0100 富士山は日本で最も高い山で、標高は3,776メートルである。
+03 [KEEP  ] 0.0009 山頂付近は夏でも気温が低く、天候が急に変化することがある。
 04 [DELETE] 0.8480 外部リンク: https://example.com/fuji
 05 [DELETE] 0.8244 この記事は検証可能な参考文献が不足しています。
-06 [KEEP] 0.0472 登山道は複数あり、利用者は体力や経験に応じて経路を選ぶ。
+06 [KEEP  ] 0.0472 登山道は複数あり、利用者は体力や経験に応じて経路を選ぶ。
 07 [DELETE] 0.8707 カテゴリ: 日本の山 | 火山 | 世界遺産
-08 [KEEP] 0.4276 
+08 [KEEP  ] 0.4276 
 ```
 
 ## Intended Use

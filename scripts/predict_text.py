@@ -41,7 +41,7 @@ def main() -> None:
     # ---------------------------------------------------------
     for line_number, (line, probability) in enumerate(zip(lines, probabilities, strict=True), start=1):
         label = "DELETE" if probability >= THRESHOLD else "KEEP"
-        print(f"{line_number:02d} [{label}] {probability:.4f} {line}")
+        print(f"{line_number:02d} [{label:<6}] {probability:.4f} {line}")
 
 
 if __name__ == "__main__":
