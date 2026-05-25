@@ -18,9 +18,8 @@ def main() -> None:
     # ---------------------------------------------------------
     # Load tokenizer and AutoModel-compatible line classifier.
     # ---------------------------------------------------------
-    device = torch.device("mps")
     tokenizer = AutoTokenizer.from_pretrained("MK0727/noise-line-remover-jp")
-    model = AutoModel.from_pretrained("MK0727/noise-line-remover-jp", trust_remote_code=True).to(device)
+    model = AutoModel.from_pretrained("MK0727/noise-line-remover-jp", trust_remote_code=True)
     model.eval()
 
     # ---------------------------------------------------------
@@ -28,7 +27,7 @@ def main() -> None:
     # ---------------------------------------------------------
     lines = TEXT.split("\n")
     text = "".join(f"{LINE_TOKEN}{line}" for line in lines)
-    inputs = tokenizer(text, return_tensors="pt").to(device)
+    inputs = tokenizer(text, return_tensors="pt")
 
     # ---------------------------------------------------------
     # Predict the deletion probability for each line marker.
