@@ -113,7 +113,17 @@ Training uses a generated train/valid/test split from the dataset's `train` spli
 
 ## Performance
 
-Metrics should be regenerated after training the new keep-based checkpoint. The training script reports keep-positive metrics such as `precision_keep`, `recall_keep`, and `f1_keep`.
+The model was evaluated on a held-out test split from `MK0727/noise-line-label-jp`.
+
+The most important metric is `F1 keep`, because the model is intended to preserve useful corpus lines while removing noisy ones.
+
+| Metric | Score |
+| --- | ---: |
+| F1 keep | 0.927 |
+| Precision keep | 0.946 |
+| Recall keep | 0.908 |
+
+This means the model is conservative about keeping lines: when it keeps a line, it is usually useful, but some useful short lines, metadata-like lines, or code-like lines may be removed.
 
 ## Inference Notes
 
