@@ -117,13 +117,13 @@ The model was evaluated on a held-out test split from `MK0727/noise-line-label-j
 
 The most important metric is `F1 keep`, because the model is intended to preserve useful corpus lines while removing noisy ones.
 
-| Metric | Score |
-| --- | ---: |
-| F1 keep | 0.927 |
-| Precision keep | 0.946 |
-| Recall keep | 0.908 |
+| Metric | Score (higher is better, max 1.0) | Meaning |
+| --- | ---: | --- |
+| F1 keep | 0.927 | Balance between keeping useful lines and avoiding noisy lines |
+| Precision keep | 0.946 | How often kept lines are actually useful |
+| Recall keep | 0.908 | How many useful lines the model keeps |
 
-This means the model is conservative about keeping lines: when it keeps a line, it is usually useful, but some useful short lines, metadata-like lines, or code-like lines may be removed.
+This means the model is conservative about keeping lines: some useful short lines, metadata-like lines, or code-like lines may be removed.
 
 ## Inference Notes
 
