@@ -109,8 +109,6 @@ Each input line has to be prefixed with a special line token, `<line>`. The mode
 
 The model is trained on `MK0727/noise-line-label-jp`, a Japanese line-level dataset with `lines_to_keep` annotations.
 
-Training uses a generated train/valid/test split from the dataset's `train` split.
-
 ## Performance
 
 The model was evaluated on a held-out test split from `MK0727/noise-line-label-jp`.
@@ -131,4 +129,4 @@ For short texts, all lines can be processed in a single 4096-token window. For l
 
 ## Limitations
 
-This model is specialized for Japanese web-text cleanup. It may perform poorly on other languages, highly structured documents, code, and tables.
+This model is specialized for Japanese web-text cleanup. It may perform poorly on other languages, code, and tables.
