@@ -2,5 +2,6 @@ __pycache__/
 .env
 venv/
 **/fineweb2_line_deleter.egg-info/
+**/fineweb2_line_keeper.egg-info/
 outputs/
 samples/
