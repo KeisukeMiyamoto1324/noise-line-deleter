@@ -8,7 +8,7 @@ from torch import nn
 from transformers import AutoConfig, AutoModel, AutoTokenizer, PreTrainedTokenizerBase
 from transformers.modeling_outputs import BaseModelOutput
 
-from fineweb2_line_keeper import LINE_TOKEN
+from corpus_refiner_jp import LINE_TOKEN
 
 
 class LineKeepModel(nn.Module):

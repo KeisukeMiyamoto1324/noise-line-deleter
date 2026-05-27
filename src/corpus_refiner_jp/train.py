@@ -16,8 +16,8 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import get_linear_schedule_with_warmup
 
-from fineweb2_line_keeper.config import TrainConfig
-from fineweb2_line_keeper.data import (
+from corpus_refiner_jp.config import TrainConfig
+from corpus_refiner_jp.data import (
     LineWindow,
     LineWindowDataset,
     collate_line_windows,
@@ -26,8 +26,8 @@ from fineweb2_line_keeper.data import (
     dataset_sizes,
     load_line_keep_dataset,
 )
-from fineweb2_line_keeper.metrics import compute_metrics, prefix_metrics
-from fineweb2_line_keeper.model import (
+from corpus_refiner_jp.metrics import compute_metrics, prefix_metrics
+from corpus_refiner_jp.model import (
     LineKeepModel,
     create_tokenizer,
     get_line_token_id,

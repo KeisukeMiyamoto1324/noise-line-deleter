@@ -10,11 +10,11 @@ from huggingface_hub import hf_hub_download
 from transformers import PreTrainedTokenizerBase
 from transformers import AutoTokenizer
 
-from fineweb2_line_keeper.data import build_line_labels, load_line_keep_dataset, wrap_with_special_tokens
-from fineweb2_line_keeper.model import LineKeepModel, get_line_token_id
+from corpus_refiner_jp.data import build_line_labels, load_line_keep_dataset, wrap_with_special_tokens
+from corpus_refiner_jp.model import LineKeepModel, get_line_token_id
 
 
-MODEL_REPO_ID = "MK0727/noise-line-keeper-jp"
+MODEL_REPO_ID = "MK0727/corpus-refiner-jp"
 
 
 @dataclass(frozen=True)

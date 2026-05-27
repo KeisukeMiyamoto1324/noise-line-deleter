@@ -16,7 +16,7 @@ from transformers.models.modernbert.modeling_modernbert import ModernBertModel, 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "outputs" / "run-001" / "best"
-DEFAULT_COMMIT_MESSAGE = "Upload trained FineWeb2 line keeper model"
+DEFAULT_COMMIT_MESSAGE = "Upload trained corpus-refiner-jp model"
 LINE_TOKEN = "<line>"
 REMOTE_MODEL_CODE = '''from __future__ import annotations
 

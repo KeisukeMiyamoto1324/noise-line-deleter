@@ -18,8 +18,8 @@ def main() -> None:
     # ---------------------------------------------------------
     # Load tokenizer and AutoModel-compatible line classifier.
     # ---------------------------------------------------------
-    tokenizer = AutoTokenizer.from_pretrained("MK0727/noise-line-keeper-jp")
-    model = AutoModel.from_pretrained("MK0727/noise-line-keeper-jp", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained("MK0727/corpus-refiner-jp")
+    model = AutoModel.from_pretrained("MK0727/corpus-refiner-jp", trust_remote_code=True)
     model.eval()
 
     # ---------------------------------------------------------

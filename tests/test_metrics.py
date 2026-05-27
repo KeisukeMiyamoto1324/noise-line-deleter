@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from fineweb2_line_keeper.metrics import compute_metrics
+from corpus_refiner_jp.metrics import compute_metrics
 
 
 def test_compute_metrics_reports_keep_positive_metrics() -> None:

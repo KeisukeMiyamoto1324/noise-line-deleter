@@ -11,9 +11,9 @@ tags:
 - modernbert
 ---
 
-# noise-line-keeper-jp
+# corpus-refiner-jp
 
-noise-line-keeper-jp is a Japanese line-level keep classifier for corpus cleanup. Given a multi-line text, it predicts whether each line should be kept.
+corpus-refiner-jp is a Japanese line-level keep classifier for corpus cleanup. Given a multi-line text, it predicts whether each line should be kept.
 
 This model is fine-tuned from [`sbintuitions/modernbert-ja-130m`](https://huggingface.co/sbintuitions/modernbert-ja-130m). The model uses ModernBERT hidden states at special line-token positions and applies a binary classifier to each line.
 
@@ -35,8 +35,8 @@ TEXT = """
 カテゴリ: 日本の山 | 火山 | 世界遺産
 """
 
-tokenizer = AutoTokenizer.from_pretrained("MK0727/noise-line-keeper-jp")
-model = AutoModel.from_pretrained("MK0727/noise-line-keeper-jp", trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained("MK0727/corpus-refiner-jp")
+model = AutoModel.from_pretrained("MK0727/corpus-refiner-jp", trust_remote_code=True)
 model.eval()
 
 lines = TEXT.split("\n")

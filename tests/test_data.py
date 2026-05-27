@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fineweb2_line_keeper.data import build_line_labels, create_document_windows
+from corpus_refiner_jp.data import build_line_labels, create_document_windows
 
 
 class FakeTokenizer:
