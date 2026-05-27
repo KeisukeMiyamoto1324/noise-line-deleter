@@ -8,10 +8,10 @@ from torch import nn
 from transformers import AutoConfig, AutoModel, AutoTokenizer, PreTrainedTokenizerBase
 from transformers.modeling_outputs import BaseModelOutput
 
-from fineweb2_line_deleter import LINE_TOKEN
+from fineweb2_line_keeper import LINE_TOKEN
 
 
-class LineNoiseModel(nn.Module):
+class LineKeepModel(nn.Module):
     def __init__(
         self,
         model_name: str,
@@ -111,7 +111,7 @@ def get_line_token_id(tokenizer: PreTrainedTokenizerBase) -> int:
 
 
 def save_training_artifacts(
-    model: LineNoiseModel,
+    model: LineKeepModel,
     tokenizer: PreTrainedTokenizerBase,
     output_dir: Path,
 ) -> None:

@@ -14,9 +14,9 @@ def compute_metrics(labels: list[int], predictions: list[int]) -> dict[str, floa
         zero_division=0,
     )
     return {
-        "precision_noise": float(precision),
-        "recall_noise": float(recall),
-        "f1_noise": float(f1),
+        "precision_keep": float(precision),
+        "recall_keep": float(recall),
+        "f1_keep": float(f1),
         "accuracy": float(accuracy_score(labels, predictions)),
         "macro_f1": float(f1_score(labels, predictions, average="macro", zero_division=0)),
     }

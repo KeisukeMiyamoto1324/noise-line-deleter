@@ -18,8 +18,8 @@ def main() -> None:
     # ---------------------------------------------------------
     # Load tokenizer and AutoModel-compatible line classifier.
     # ---------------------------------------------------------
-    tokenizer = AutoTokenizer.from_pretrained("MK0727/noise-line-remover-jp")
-    model = AutoModel.from_pretrained("MK0727/noise-line-remover-jp", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained("MK0727/noise-line-keeper-jp")
+    model = AutoModel.from_pretrained("MK0727/noise-line-keeper-jp", trust_remote_code=True)
     model.eval()
 
     # ---------------------------------------------------------
@@ -30,7 +30,7 @@ def main() -> None:
     inputs = tokenizer(text, return_tensors="pt")
 
     # ---------------------------------------------------------
-    # Predict the deletion probability for each line marker.
+    # Predict the keep probability for each line marker.
     # ---------------------------------------------------------
     with torch.no_grad():
         logits = model(**inputs).logits
@@ -40,7 +40,7 @@ def main() -> None:
     # Print each line with its predicted label and probability.
     # ---------------------------------------------------------
     for line_number, (line, probability) in enumerate(zip(lines, probabilities, strict=True), start=1):
-        label = "DELETE" if probability >= THRESHOLD else "KEEP"
+        label = "KEEP" if probability >= THRESHOLD else "DELETE"
         print(f"{line_number:02d} [{label:<6}] {probability:.4f} {line}")
 
 

@@ -124,11 +124,11 @@ function renderDocument() {
   elements.documentTitle.textContent = sample.document_id;
   elements.lineCount.textContent = String(sample.line_count);
   elements.predictedCount.textContent = String(predictedCount);
-  elements.actualCount.textContent = String(sample.actual_delete_count);
+  elements.actualCount.textContent = String(sample.actual_keep_count);
 
   const fragment = document.createDocumentFragment();
   sample.lines.forEach((line) => {
-    const predicted = line.noise_probability >= state.threshold;
+    const predicted = line.keep_probability >= state.threshold;
     if (state.predictedOnly && !predicted) {
       return;
     }
@@ -137,7 +137,7 @@ function renderDocument() {
     row.className = [
       "line-row",
       predicted ? "is-predicted" : "",
-      state.showActual && line.actual_delete ? "is-actual" : "",
+      state.showActual && line.actual_keep ? "is-actual" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -152,7 +152,7 @@ function renderDocument() {
 
     const probability = document.createElement("div");
     probability.className = "line-probability";
-    probability.textContent = line.noise_probability.toFixed(3);
+    probability.textContent = line.keep_probability.toFixed(3);
 
     row.append(number, text, probability);
     fragment.append(row);
@@ -162,7 +162,7 @@ function renderDocument() {
 }
 
 function countPredicted(sample) {
-  return sample.lines.reduce((count, line) => count + Number(line.noise_probability >= state.threshold), 0);
+  return sample.lines.reduce((count, line) => count + Number(line.keep_probability >= state.threshold), 0);
 }
 
 main().catch((error) => {

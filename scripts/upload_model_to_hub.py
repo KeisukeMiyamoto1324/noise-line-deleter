@@ -16,7 +16,7 @@ from transformers.models.modernbert.modeling_modernbert import ModernBertModel, 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "outputs" / "run-001" / "best"
-DEFAULT_COMMIT_MESSAGE = "Upload trained FineWeb2 line deleter model"
+DEFAULT_COMMIT_MESSAGE = "Upload trained FineWeb2 line keeper model"
 LINE_TOKEN = "<line>"
 REMOTE_MODEL_CODE = '''from __future__ import annotations
 
@@ -28,7 +28,7 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from transformers.models.modernbert.modeling_modernbert import ModernBertModel, ModernBertPreTrainedModel
 
 
-class LineNoiseModel(ModernBertPreTrainedModel):
+class LineKeepModel(ModernBertPreTrainedModel):
     all_tied_weights_keys: dict[str, list[str]] = {}
 
     def __init__(self, config: Any) -> None:
@@ -46,7 +46,7 @@ class LineNoiseModel(ModernBertPreTrainedModel):
 '''
 
 
-class LineNoiseModel(ModernBertPreTrainedModel):
+class LineKeepModel(ModernBertPreTrainedModel):
     all_tied_weights_keys: dict[str, list[str]] = {}
 
     def __init__(self, config: Any) -> None:
@@ -112,20 +112,20 @@ def convert_model_dir(model_dir: Path, output_dir: Path) -> Path:
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     line_token_id = int(tokenizer.convert_tokens_to_ids(LINE_TOKEN))
     config = AutoConfig.from_pretrained(model_dir)
-    config.architectures = ["LineNoiseModel"]
-    config.auto_map = {"AutoModel": "modeling_line_noise.LineNoiseModel"}
-    config.id2label = {0: "KEEP", 1: "DELETE"}
-    config.label2id = {"KEEP": 0, "DELETE": 1}
+    config.architectures = ["LineKeepModel"]
+    config.auto_map = {"AutoModel": "modeling_line_keep.LineKeepModel"}
+    config.id2label = {0: "DELETE", 1: "KEEP"}
+    config.label2id = {"DELETE": 0, "KEEP": 1}
     config.line_token_id = line_token_id
     config.num_labels = 2
 
-    model = LineNoiseModel(config)
+    model = LineKeepModel(config)
     state_dict = torch.load(model_dir / "model.pt", map_location="cpu")
     model.load_state_dict(state_dict)
 
     model.save_pretrained(output_dir, safe_serialization=True)
     tokenizer.save_pretrained(output_dir)
-    (output_dir / "modeling_line_noise.py").write_text(REMOTE_MODEL_CODE, encoding="utf-8")
+    (output_dir / "modeling_line_keep.py").write_text(REMOTE_MODEL_CODE, encoding="utf-8")
     return output_dir
 
 

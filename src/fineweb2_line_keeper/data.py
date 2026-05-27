@@ -26,10 +26,10 @@ class LineWindowDataset(TorchDataset[LineWindow]):
         return self.windows[index]
 
 
-def build_line_labels(text: str, lines_to_delete: list[int]) -> tuple[list[str], list[int]]:
+def build_line_labels(text: str, lines_to_keep: list[int]) -> tuple[list[str], list[int]]:
     lines = text.split("\n")
-    delete_numbers = set(lines_to_delete)
-    labels = [1 if line_number in delete_numbers else 0 for line_number in range(1, len(lines) + 1)]
+    keep_numbers = set(lines_to_keep)
+    labels = [1 if line_number in keep_numbers else 0 for line_number in range(1, len(lines) + 1)]
     return lines, labels
 
 
@@ -46,7 +46,7 @@ def split_dataset(dataset: Dataset, train_ratio: float, valid_ratio: float, seed
     )
 
 
-def load_line_noise_dataset(dataset_name: str, train_ratio: float, valid_ratio: float, seed: int) -> DatasetDict:
+def load_line_keep_dataset(dataset_name: str, train_ratio: float, valid_ratio: float, seed: int) -> DatasetDict:
     dataset = load_dataset(dataset_name, split="train")
     return split_dataset(dataset, train_ratio, valid_ratio, seed)
 
@@ -65,7 +65,7 @@ def create_windows(
             create_document_windows(
                 document_id=str(row["id"]),
                 text=str(row["text"]),
-                lines_to_delete=list(row["lines_to_delete"]),
+                lines_to_keep=list(row["lines_to_keep"]),
                 tokenizer=tokenizer,
                 line_token_id=line_token_id,
                 max_length=max_length,
@@ -79,14 +79,14 @@ def create_windows(
 def create_document_windows(
     document_id: str,
     text: str,
-    lines_to_delete: list[int],
+    lines_to_keep: list[int],
     tokenizer: PreTrainedTokenizerBase,
     line_token_id: int,
     max_length: int,
     max_lines_per_window: int,
     line_overlap: int,
 ) -> list[LineWindow]:
-    lines, labels = build_line_labels(text, lines_to_delete)
+    lines, labels = build_line_labels(text, lines_to_keep)
     encoded_lines = [encode_line(line, tokenizer, line_token_id, max_length) for line in lines]
     windows: list[LineWindow] = []
     start_index = 0
@@ -174,15 +174,15 @@ def collate_line_windows(batch: list[LineWindow], pad_token_id: int) -> dict[str
 
 
 def count_labels(windows: list[LineWindow]) -> tuple[int, int]:
-    clean_count = 0
-    noise_count = 0
+    delete_count = 0
+    keep_count = 0
     for window in windows:
         for label in window.labels:
             if label == 1:
-                noise_count += 1
+                keep_count += 1
             else:
-                clean_count += 1
-    return clean_count, noise_count
+                delete_count += 1
+    return delete_count, keep_count
 
 
 def dataset_sizes(dataset_dict: DatasetDict) -> dict[str, int]:

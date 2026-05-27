@@ -16,19 +16,19 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import get_linear_schedule_with_warmup
 
-from fineweb2_line_deleter.config import TrainConfig
-from fineweb2_line_deleter.data import (
+from fineweb2_line_keeper.config import TrainConfig
+from fineweb2_line_keeper.data import (
     LineWindow,
     LineWindowDataset,
     collate_line_windows,
     count_labels,
     create_windows,
     dataset_sizes,
-    load_line_noise_dataset,
+    load_line_keep_dataset,
 )
-from fineweb2_line_deleter.metrics import compute_metrics, prefix_metrics
-from fineweb2_line_deleter.model import (
-    LineNoiseModel,
+from fineweb2_line_keeper.metrics import compute_metrics, prefix_metrics
+from fineweb2_line_keeper.model import (
+    LineKeepModel,
     create_tokenizer,
     get_line_token_id,
     save_training_artifacts,
@@ -38,7 +38,7 @@ from fineweb2_line_deleter.model import (
 def parse_args() -> TrainConfig:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-name", type=str, default="sbintuitions/modernbert-ja-130m")
-    parser.add_argument("--dataset-name", type=str, default="MK0727/line-noise-label")
+    parser.add_argument("--dataset-name", type=str, default="MK0727/noise-line-label-jp")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/run-001"))
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--max-lines-per-window", type=int, default=512)
@@ -84,7 +84,7 @@ def main() -> None:
 
     tokenizer = create_tokenizer(config.model_name)
     line_token_id = get_line_token_id(tokenizer)
-    dataset_dict = load_line_noise_dataset(
+    dataset_dict = load_line_keep_dataset(
         config.dataset_name,
         config.train_ratio,
         config.valid_ratio,
@@ -103,17 +103,17 @@ def main() -> None:
         for split, dataset in dataset_dict.items()
     }
 
-    model = LineNoiseModel(
+    model = LineKeepModel(
         config.model_name,
         line_token_id,
         len(tokenizer),
         config.freeze_until_layer,
     ).to(device)
-    clean_count, noise_count = count_labels(windows_by_split["train"])
+    delete_count, keep_count = count_labels(windows_by_split["train"])
     class_weights = torch.tensor(
         [
-            (clean_count + noise_count) / (2.0 * clean_count),
-            (clean_count + noise_count) / (2.0 * noise_count),
+            (delete_count + keep_count) / (2.0 * delete_count),
+            (delete_count + keep_count) / (2.0 * keep_count),
         ],
         dtype=torch.float32,
         device=device,
@@ -155,12 +155,12 @@ def main() -> None:
         history.append(epoch_metrics)
         write_json(config.output_dir / "history.json", history)
 
-        if valid_metrics["f1_noise"] > best_f1:
-            best_f1 = valid_metrics["f1_noise"]
+        if valid_metrics["f1_keep"] > best_f1:
+            best_f1 = valid_metrics["f1_keep"]
             save_training_artifacts(model, tokenizer, config.output_dir / "best")
 
     test_metrics = evaluate(model, test_loader, class_weights, device)
-    last_metrics = {"best_valid_f1_noise": best_f1, **prefix_metrics(test_metrics, "test")}
+    last_metrics = {"best_valid_f1_keep": best_f1, **prefix_metrics(test_metrics, "test")}
     write_json(config.output_dir / "metrics.json", last_metrics)
     save_training_artifacts(model, tokenizer, config.output_dir / "last")
 
@@ -183,12 +183,12 @@ def create_loader(
     )
 
 
-def get_trainable_parameters(model: LineNoiseModel) -> list[torch.nn.Parameter]:
+def get_trainable_parameters(model: LineKeepModel) -> list[torch.nn.Parameter]:
     return [parameter for parameter in model.parameters() if parameter.requires_grad]
 
 
 def train_one_epoch(
-    model: LineNoiseModel,
+    model: LineKeepModel,
     loader: DataLoader[dict[str, torch.Tensor | list[list[int]]]],
     optimizer: AdamW,
     scheduler: Any,
@@ -247,7 +247,7 @@ def train_one_epoch(
 
 @torch.no_grad()
 def evaluate(
-    model: LineNoiseModel,
+    model: LineKeepModel,
     loader: DataLoader[dict[str, torch.Tensor | list[list[int]]]],
     class_weights: torch.Tensor,
     device: torch.device,

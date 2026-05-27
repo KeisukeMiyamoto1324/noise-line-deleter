@@ -7,9 +7,9 @@
   --muted: #657086;
   --line: #d8dee8;
   --accent: #1f6feb;
-  --delete-bg: #fee2e2;
-  --delete-border: #dc2626;
-  --delete-ink: #7f1d1d;
+  --keep-bg: #dcfce7;
+  --keep-border: #16a34a;
+  --keep-ink: #14532d;
   --true-bg: #fff7ed;
   --true-border: #f97316;
 }
@@ -179,8 +179,8 @@ input {
   align-self: center;
   min-width: 34px;
   border-radius: 999px;
-  background: var(--delete-bg);
-  color: var(--delete-ink);
+  background: var(--keep-bg);
+  color: var(--keep-ink);
   font-size: 12px;
   font-weight: 750;
   padding: 4px 8px;
@@ -268,9 +268,9 @@ input {
 }
 
 .line-row.is-predicted {
-  border-left: 4px solid var(--delete-border);
-  background: var(--delete-bg);
-  color: var(--delete-ink);
+  border-left: 4px solid var(--keep-border);
+  background: var(--keep-bg);
+  color: var(--keep-ink);
 }
 
 .line-row.is-actual {
